@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 
 public class ClientExecutor {
-    public static void main(String[] args) throws InterruptedException {
+    public static void runComparison() throws InterruptedException{
         Client client = new Client();
         
         try {
@@ -27,5 +27,10 @@ public class ClientExecutor {
         } catch (IOException ex) {
             System.out.println("Connection attempt failed.");
         }
+    }
+    
+    public static void main(String[] args) throws InterruptedException {
+        Client client = new Client();
+        client.connectWithRetries("localhost", (short)13092);
     }
 }

@@ -19,6 +19,23 @@ public class Client {
         outputStream = new DataOutputStream(clientSocket.getOutputStream());
     }
     
+    public void connectWithRetries(String server, short port) {
+        try {
+            while (true) {
+                try {
+                    clientSocket = new Socket(server, port);
+                    break;
+                } catch (IOException e) {
+                    System.out.println("Could not establish connection with the server.\nRetrying in 3 seconds.");
+                    Thread.sleep(3000);
+                }
+            }
+        } catch (InterruptedException ie) {
+            ie.printStackTrace();
+        }
+        
+    }
+    
     public void closeConnection() throws IOException {
         clientSocket.close();
     }

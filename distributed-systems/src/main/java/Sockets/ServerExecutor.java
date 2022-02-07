@@ -37,7 +37,7 @@ public class ServerExecutor {
             }
             System.out.println("");
             
-            System.out.println("Transmission time using writeDouble: " + (finalTime - initialTime));
+            System.out.println("Transmission time using ByteBuffer: " + (finalTime - initialTime));
         } catch (IOException ex) {
             System.out.println("Error while starting the connection");
         }
