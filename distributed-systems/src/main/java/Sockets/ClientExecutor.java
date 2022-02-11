@@ -29,8 +29,10 @@ public class ClientExecutor {
         }
     }
     
-    public static void main(String[] args) throws InterruptedException {
+    public static void main(String[] args) throws IOException, InterruptedException {
         Client client = new Client();
         client.connectWithRetries("localhost", (short)13092);
+        Thread.sleep(1000);
+        client.testSendDoublesInBuffer(100000);
     }
 }

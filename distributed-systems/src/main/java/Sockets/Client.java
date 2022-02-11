@@ -24,6 +24,8 @@ public class Client {
             while (true) {
                 try {
                     clientSocket = new Socket(server, port);
+                    inputStream = new DataInputStream(clientSocket.getInputStream());
+                    outputStream = new DataOutputStream(clientSocket.getOutputStream());
                     break;
                 } catch (IOException e) {
                     System.out.println("Could not establish connection with the server.\nRetrying in 3 seconds.");
@@ -33,7 +35,6 @@ public class Client {
         } catch (InterruptedException ie) {
             ie.printStackTrace();
         }
-        
     }
     
     public void closeConnection() throws IOException {
@@ -49,6 +50,7 @@ public class Client {
     }
     
     public void testSendDoublesInBuffer(int numberOfDoubles) throws IOException {
+        System.out.println("Sending data");
         outputStream.writeInt(numberOfDoubles);
         
         ByteBuffer byteBuffer = ByteBuffer.allocate(numberOfDoubles * Double.SIZE);
