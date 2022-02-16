@@ -10,16 +10,16 @@ import java.util.concurrent.locks.ReentrantLock;
 public class PiCalculatorClient {
     private Socket[] servers;
     private boolean[] isCalculated;
-    private double[] serverResults;
     private double piValue;
     private static ReentrantLock piValueLock;
     
-    private static int NO_SERVERS = 4;
+    private final static int NO_SERVERS = 4;
+    private final static int WAIT_TIME = 3;
     
     public PiCalculatorClient() {
         servers = new Socket[NO_SERVERS];
         isCalculated = new boolean[NO_SERVERS];
-        serverResults = new double[NO_SERVERS];
+        piValueLock = new ReentrantLock();
         piValue = 0;
     }
     
@@ -29,30 +29,34 @@ public class PiCalculatorClient {
         piValueLock.unlock();
     }
     
-    public double calculatePi(String[] ipAddresses, int[] ports) {
-        try {
+    public double calculatePi(String[] ipAddresses, int[] ports) throws InterruptedException {
+        boolean pendingServers = true;
+        while (pendingServers) {
             for (int i = 0; i < NO_SERVERS; i++) {
                 if (isCalculated[i]) continue;
                 try {
                     servers[i] = new Socket(ipAddresses[i], ports[i]);
                     isCalculated[i] = true;
-                    (new PiCalculatorClientThread(servers[i], i)).start();
-                    break;
+                    Thread newThread = new PiCalculatorClientThread(servers[i], (short)ports[i], i);
+                    newThread.start();
+                    newThread.join();
                 } catch (Exception e) {
-                    System.out.println("Could not connect to server " + i + 1);
-                    throw e;
+                    System.out.println("Could not connect to server " + (i + 1));
                 }
             }
-        } catch (Exception e) {
-            System.out.println("Reattempting connection in 3 seconds...");
+            
+            pendingServers = false;
+            for (boolean isServerCalculated: isCalculated) {
+                pendingServers = pendingServers || !isServerCalculated;
+            }
+            
+            if (pendingServers) {
+                System.out.println("Reattempting connection in 3 seconds...");
+                Thread.sleep(1000 * WAIT_TIME);
+            }
         }
         
-        double totalSum = 0;
-        for (int i = 0; i < serverResults.length; i++) {
-            totalSum += serverResults[i];
-        }
-        
-        return totalSum;
+        return piValue;
     }
     
     class PiCalculatorClientThread extends Thread {
@@ -61,7 +65,7 @@ public class PiCalculatorClient {
         DataInputStream inputStream;
         DataOutputStream outputStream;
         
-        public PiCalculatorClientThread(Socket connection, int connectionNumber) throws IOException {
+        public PiCalculatorClientThread(Socket connection, short port, int connectionNumber) throws IOException {
             this.connection = connection;
             inputStream = new DataInputStream(connection.getInputStream());
             outputStream = new DataOutputStream(connection.getOutputStream());
@@ -72,9 +76,9 @@ public class PiCalculatorClient {
         public void run () {
             try {
                 double serverResult = getServerCalculation();
-                
+                addToSum(serverResult);
             } catch (IOException ioe) {
-                
+                ioe.printStackTrace();
             }
         }
         
