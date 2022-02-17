@@ -14,19 +14,12 @@ public class PiCalculator {
             case 0:
                 PiCalculatorClient piCalculator = new PiCalculatorClient();
                 var piValue = piCalculator.calculatePi(
-                        new String[]{"localhost", "localhost", "localhost", "localhost"}, 
-                        new int[]{5001, 5002, 5003, 5004});
+                        new String[]{"localhost", "localhost", "localhost", "localhost"});
                 System.out.println("PI value: " + piValue);
             break;
-            
             default:
-                for (int i = 1; i <= 4; i++) {
-                    try {
-                        PiCalculatorServerNegative.runServer(i);
-                    } catch (Exception e) {
-                        
-                    }
-                }
+                PiCalculatorServer piCalculatorServer = new PiCalculatorServer(programType);
+                piCalculatorServer.startServer();
             break;
         }
     }
