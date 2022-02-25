@@ -1,6 +1,4 @@
 
-package RingSocketTopology;
-
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -13,23 +11,28 @@ import javax.net.ssl.SSLSocketFactory;
 
 public class NetworkNode {
     private int nodeNumber;
-    
-    
     private volatile boolean canWriteValue;
     private volatile Semaphore canSendSemaphore;
     private volatile int value;
     private ReentrantLock valueLock;
     
     public static final int INITIAL_PORT = 5000;
+    public static final int RING_SIZE = 2;
     
     public NetworkNode(int nodeNumber) {
         this.nodeNumber = nodeNumber;
         canSendSemaphore = new Semaphore(1);
         canWriteValue = true;
+        valueLock = new ReentrantLock();
     }
     
-    public void start () {
-        
+    public void start () throws InterruptedException {
+        ClientThread clientThread = new ClientThread("localhost");
+        ServerThread serverThread = new ServerThread();
+        clientThread.start();
+        serverThread.start();
+        clientThread.join();
+        serverThread.join();
     }
     
     public void setValue (int newValue) {
@@ -64,18 +67,20 @@ public class NetworkNode {
 
         public ClientThread (String ip) {
             this.serverIp = ip;
-            this.port = NetworkNode.INITIAL_PORT + (nodeNumber * 2);
+            this.port = NetworkNode.INITIAL_PORT + ((nodeNumber + 1) % RING_SIZE);
         }
         
         @Override
         public void run() {
             try {
                 connect();
-                canSendSemaphore.acquire();
+                if (nodeNumber != 0) {
+                    canSendSemaphore.acquire();
+                }
                 while (true) {
                     System.out.println("Waiting for semaphore");
                     canSendSemaphore.acquire();
-                    
+                    Thread.sleep(500);
                     sendValue(getValue() + 1);
                     canWriteValue = true;
                 }
@@ -90,7 +95,8 @@ public class NetworkNode {
             SSLSocketFactory socketFactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
             while (true) {
                 try {
-                    this.connection = socketFactory.createSocket(this.serverIp, this.port);
+                    //this.connection = socketFactory.createSocket(this.serverIp, this.port);
+                    this.connection = new Socket(this.serverIp, this.port);
                     break;
                 } catch (IOException ioe) {
                     System.out.println("Client " + nodeNumber + " could not connect with the server ");
@@ -113,7 +119,7 @@ public class NetworkNode {
         private DataInputStream inputStream;
         
         public ServerThread() {
-            this.port = INITIAL_PORT + (nodeNumber * 2 + 1);
+            this.port = INITIAL_PORT + (nodeNumber);
         }
         
         @Override
@@ -136,7 +142,9 @@ public class NetworkNode {
         
         private void connect() throws IOException {
             SSLServerSocketFactory socketFactory = (SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
-            ServerSocket serverSocket = socketFactory.createServerSocket(this.port);
+            //ServerSocket serverSocket = socketFactory.createServerSocket(this.port);
+            ServerSocket serverSocket = new ServerSocket(this.port);
+            System.out.println("Waiting for connections on port " + this.port);
             connection = serverSocket.accept();
             
             inputStream = new DataInputStream(connection.getInputStream());
@@ -145,6 +153,9 @@ public class NetworkNode {
         private int waitForValue () throws IOException {
             int receivedValue = inputStream.readInt();
             System.out.println("Value received " + receivedValue);
+            if (receivedValue >= 500) {
+                receivedValue = 0;
+            }
             return receivedValue;
         }
         
