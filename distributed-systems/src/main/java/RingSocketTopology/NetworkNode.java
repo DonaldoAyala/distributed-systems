@@ -18,8 +18,8 @@ public class NetworkNode {
     private ReentrantLock valueLock;
     
     public static final int INITIAL_PORT = 5000;
-    public static final int RING_SIZE = 2;
-    public static final int STOP_VALUE = 10;
+    public static final int RING_SIZE = 6;
+    public static final int STOP_VALUE = 500;
     
     public NetworkNode(int nodeNumber) {
         this.nodeNumber = nodeNumber;
@@ -83,7 +83,6 @@ public class NetworkNode {
                 while (isRunning) {
                     //System.out.println("Waiting for token");
                     canSendSemaphore.acquire();
-                    Thread.sleep(500);
                     short valueToSend = getValue();
                     sendValue((short)(valueToSend >= STOP_VALUE ? valueToSend : valueToSend + 1));
                     canWriteValue = true;
