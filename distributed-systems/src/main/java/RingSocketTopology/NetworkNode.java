@@ -14,23 +14,26 @@ public class NetworkNode {
     private volatile boolean canWriteValue;
     private volatile Semaphore canSendSemaphore;
     private volatile int value;
+    private volatile boolean isRunning;
     private ReentrantLock valueLock;
     
     public static final int INITIAL_PORT = 5000;
     public static final int RING_SIZE = 2;
+    public static final int STOP_VALUE = 10;
     
     public NetworkNode(int nodeNumber) {
         this.nodeNumber = nodeNumber;
         canSendSemaphore = new Semaphore(1);
         canWriteValue = true;
         valueLock = new ReentrantLock();
+        isRunning = true;
     }
     
     public void start () throws InterruptedException {
         ClientThread clientThread = new ClientThread("localhost");
         ServerThread serverThread = new ServerThread();
-        clientThread.start();
         serverThread.start();
+        clientThread.start();
         clientThread.join();
         serverThread.join();
     }
@@ -77,17 +80,22 @@ public class NetworkNode {
                 if (nodeNumber != 0) {
                     canSendSemaphore.acquire();
                 }
-                while (true) {
-                    System.out.println("Waiting for semaphore");
+                while (isRunning) {
+                    //System.out.println("Waiting for token");
                     canSendSemaphore.acquire();
                     Thread.sleep(500);
-                    sendValue(getValue() + 1);
+                    int valueToSend = getValue();
+                    if (valueToSend == -1)
+                        sendValue(valueToSend);
+                    else
+                        sendValue(value + 1);
+                        
                     canWriteValue = true;
                 }
             } catch (InterruptedException ie) {
                 ie.printStackTrace();
             } catch (IOException ioe) {
-                ioe.printStackTrace();
+                System.exit(0);
             }
         }
 
@@ -95,8 +103,7 @@ public class NetworkNode {
             SSLSocketFactory socketFactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
             while (true) {
                 try {
-                    //this.connection = socketFactory.createSocket(this.serverIp, this.port);
-                    this.connection = new Socket(this.serverIp, this.port);
+                    this.connection = socketFactory.createSocket(this.serverIp, this.port);
                     break;
                 } catch (IOException ioe) {
                     System.out.println("Client " + nodeNumber + " could not connect with the server ");
@@ -105,7 +112,7 @@ public class NetworkNode {
                 }
             }
 
-            outputStream = new DataOutputStream(connection.getOutputStream());            
+            outputStream = new DataOutputStream(connection.getOutputStream());
         }
 
         private void sendValue(int valueToSend) throws IOException {
@@ -127,14 +134,19 @@ public class NetworkNode {
             try {
                 connect();
                 int readValue;
-                while (true) {
+                while (isRunning) {
                     readValue = waitForValue();
                 
                     tryWriteValue(readValue);
                 }
                 
             } catch (IOException ioe) {
-                ioe.printStackTrace();
+                try {
+                    tryWriteValue(-1);
+                } catch (InterruptedException ie) {
+                    ie.printStackTrace();
+                }
+                isRunning = false;
             } catch (InterruptedException ie) {
                 ie.printStackTrace();
             }
@@ -142,9 +154,9 @@ public class NetworkNode {
         
         private void connect() throws IOException {
             SSLServerSocketFactory socketFactory = (SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
-            //ServerSocket serverSocket = socketFactory.createServerSocket(this.port);
-            ServerSocket serverSocket = new ServerSocket(this.port);
+            ServerSocket serverSocket = socketFactory.createServerSocket(this.port);
             System.out.println("Waiting for connections on port " + this.port);
+            
             connection = serverSocket.accept();
             
             inputStream = new DataInputStream(connection.getInputStream());
@@ -152,16 +164,22 @@ public class NetworkNode {
         
         private int waitForValue () throws IOException {
             int receivedValue = inputStream.readInt();
-            System.out.println("Value received " + receivedValue);
-            if (receivedValue >= 500) {
+            System.out.println("Received value " + receivedValue);
+            if (receivedValue >= STOP_VALUE) {
                 receivedValue = 0;
+                isRunning = false;
+                try {
+                    tryWriteValue(-1);
+                } catch (InterruptedException ie) {
+                    ie.printStackTrace();
+                }
             }
             return receivedValue;
         }
         
         private void tryWriteValue(int readValue) throws InterruptedException {
             while (true) {
-                System.out.println("Waiting to write value");
+                //System.out.println("Waiting to write value");
                 if (canWriteValue) {
                     setValue(readValue);
                     break;
