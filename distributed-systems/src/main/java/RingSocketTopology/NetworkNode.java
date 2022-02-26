@@ -13,7 +13,7 @@ public class NetworkNode {
     private int nodeNumber;
     private volatile boolean canWriteValue;
     private volatile Semaphore canSendSemaphore;
-    private volatile int value;
+    private volatile short value;
     private volatile boolean isRunning;
     private ReentrantLock valueLock;
     
@@ -38,7 +38,7 @@ public class NetworkNode {
         serverThread.join();
     }
     
-    public void setValue (int newValue) {
+    public void setValue (short newValue) {
         try {
             valueLock.lock();
             this.value = newValue;
@@ -49,8 +49,8 @@ public class NetworkNode {
         }
     }
 
-    public int getValue() {
-        int currentValue;
+    public short getValue() {
+        short currentValue;
         try {
             valueLock.lock();
             currentValue = this.value;
@@ -84,12 +84,8 @@ public class NetworkNode {
                     //System.out.println("Waiting for token");
                     canSendSemaphore.acquire();
                     Thread.sleep(500);
-                    int valueToSend = getValue();
-                    if (valueToSend == -1)
-                        sendValue(valueToSend);
-                    else
-                        sendValue(value + 1);
-                        
+                    short valueToSend = getValue();
+                    sendValue((short)(valueToSend >= STOP_VALUE ? valueToSend : valueToSend + 1));
                     canWriteValue = true;
                 }
             } catch (InterruptedException ie) {
@@ -111,12 +107,11 @@ public class NetworkNode {
                     Thread.sleep(WAIT_SECONDS * 1000);
                 }
             }
-
             outputStream = new DataOutputStream(connection.getOutputStream());
         }
 
-        private void sendValue(int valueToSend) throws IOException {
-            outputStream.writeInt(valueToSend);
+        private void sendValue(short valueToSend) throws IOException {
+            outputStream.writeShort(valueToSend);
         }
     }
     
@@ -133,16 +128,15 @@ public class NetworkNode {
         public void run() {
             try {
                 connect();
-                int readValue;
+                short readValue;
                 while (isRunning) {
                     readValue = waitForValue();
-                
                     tryWriteValue(readValue);
                 }
                 
             } catch (IOException ioe) {
                 try {
-                    tryWriteValue(-1);
+                    tryWriteValue((short)-1);
                 } catch (InterruptedException ie) {
                     ie.printStackTrace();
                 }
@@ -162,14 +156,14 @@ public class NetworkNode {
             inputStream = new DataInputStream(connection.getInputStream());
         }
         
-        private int waitForValue () throws IOException {
-            int receivedValue = inputStream.readInt();
+        private short waitForValue () throws IOException {
+            short receivedValue = inputStream.readShort();
             System.out.println("Received value " + receivedValue);
             if (receivedValue >= STOP_VALUE) {
-                receivedValue = 0;
+                System.out.println("Limit reached, stopping execution");
                 isRunning = false;
                 try {
-                    tryWriteValue(-1);
+                    tryWriteValue(receivedValue);
                 } catch (InterruptedException ie) {
                     ie.printStackTrace();
                 }
@@ -177,7 +171,7 @@ public class NetworkNode {
             return receivedValue;
         }
         
-        private void tryWriteValue(int readValue) throws InterruptedException {
+        private void tryWriteValue(short readValue) throws InterruptedException {
             while (true) {
                 //System.out.println("Waiting to write value");
                 if (canWriteValue) {
