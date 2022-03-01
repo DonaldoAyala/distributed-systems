@@ -5,6 +5,8 @@ javac *.java && java -Djavax.net.ssl.keyStore=server-keystore.jks -Djavax.net.ss
 
 public class NetworkNodeRunner {
     public static void main(String[] args) throws InterruptedException {
+        System.setProperty("javax.net.ssl.keyStore","server-keystore.jks");
+        System.setProperty("javax.net.ssl.keyStorePassword","token-ring");
         System.setProperty("javax.net.ssl.trustStore","client-keystore.jks");
         System.setProperty("javax.net.ssl.trustStorePassword","token-ring");
         
