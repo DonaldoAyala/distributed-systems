@@ -18,7 +18,7 @@ public class NetworkNode {
     private ReentrantLock valueLock;
     
     public static final int INITIAL_PORT = 5000;
-    public static final int RING_SIZE = 6;
+    public static final int RING_SIZE = 2;
     public static final int STOP_VALUE = 500;
     
     public NetworkNode(int nodeNumber) {
