@@ -17,13 +17,14 @@ public class DistributedMatrixMultiplicator {
         this.divisions = divisions;
     }
     
-    public float[][] multiplicateMatrixes(float[][] A, float[][] B) throws InterruptedException {
+    public float[][] multiplicateMatrixes(float[][] A, float[][] B, String[] remoteObjectUrls) throws InterruptedException {
         // A: nxm, B: mxr
         final int n = A.length;
         final int m = A[0].length;
         final int r = B[0].length;
         
         float[][] transposedB = getTransposedMatrix(B);
+        printMatrix(transposedB);
         
         float[][][] ASubmatrixes = new float[divisions][][];
         float[][][] BSubmatrixes = new float[divisions][][];
@@ -34,14 +35,14 @@ public class DistributedMatrixMultiplicator {
         for (int submatrix = 0; submatrix < divisions; submatrix++) {
             ASubmatrixes[submatrix] = getSubmatrix(A, submatrix * AJump, 0, (submatrix + 1) * AJump, m);
             BSubmatrixes[submatrix] = getSubmatrix(transposedB, submatrix * BJump, 0, (submatrix + 1) * BJump, m);
+            printMatrix(ASubmatrixes[submatrix]);
             printMatrix(BSubmatrixes[submatrix]);
         }
-        
-        
+
         Thread[][] threads = new Thread[divisions][divisions];
         for (int i = 0; i < divisions; i++) {
             for (int j = 0; j < divisions; j++) {
-                threads[i][j] = new MatrixCalculatorClientThread("url", ASubmatrixes[i], BSubmatrixes[j], i, j);
+                threads[i][j] = new MatrixCalculatorClientThread(remoteObjectUrls[i], ASubmatrixes[i], BSubmatrixes[j], i, j);
                 threads[i][j].start();
             }
         }
@@ -54,15 +55,10 @@ public class DistributedMatrixMultiplicator {
                 
         float[][] result = new float[n][r];
         
-        System.out.println("submatrix diensions " + matrixFragments[0][0].length + "," + matrixFragments[0][0][0].length);
-        
         for (int row = 0; row < divisions; row++) {
             for (int col = 0; col < divisions; col++) {
                 for (int i = 0; i < matrixFragments[row][col].length; i++) {
                     for (int j = 0; j < matrixFragments[row][col][0].length; j++) {
-                        //System.out.println(result[row * AJump + i][col * BJump + j]);
-                        System.out.println("row " + (row * AJump + i) + " col " + (i + j));
-                        //System.out.println(matrixFragments[row][col][i][j]);
                         result[row * AJump + i][col * BJump + j] = matrixFragments[row][col][i][j];
                     }
                 }
@@ -71,9 +67,20 @@ public class DistributedMatrixMultiplicator {
         
         printMatrix(result);
         
-        System.out.println("Done");
+        System.out.println("Returning resulting matrix");
         
         return result;
+    }
+    
+    public float calculateChecksum(float A[][]) {
+        float checksum = 0;
+        for (int i =0 ; i < A.length; i++) {
+            for (int j = 0; j < A[0].length; j++) {
+                checksum += A[i][j];
+            }
+        }
+        
+        return checksum;
     }
     
     public void initializeMatrixes(float[][] A, float[][] B) {
@@ -105,6 +112,7 @@ public class DistributedMatrixMultiplicator {
         for (int i = 0; i < n; i++) {
             for (int j = i; j < m; j++) {
                 transposedMatrix[j][i] = A[i][j];
+                transposedMatrix[i][j] = A[j][i];
             }
         }
         
@@ -125,7 +133,7 @@ public class DistributedMatrixMultiplicator {
         return submatrix;
     }
     
-    private void printMatrix(float[][] A) {
+    public void printMatrix(float[][] A) {
         final int n = A.length;
         final int m = A[0].length;
         
@@ -156,15 +164,18 @@ public class DistributedMatrixMultiplicator {
         @Override
         public void run() {
             try {
-                RemoteMatrixMultiplicator rmm = new RemoteMatrixMultiplicator();
-                matrixFragments[row][col] = rmm.multiplyTransposedMatrixes(matrixA, matrixB);
+                RemoteMatrixMultiplicatorInterface matrixMultiplicator = (RemoteMatrixMultiplicatorInterface)Naming.lookup(this.remoteObjectUrl);
+                matrixFragments[row][col] = matrixMultiplicator.multiplyTransposedMatrixes(matrixA, matrixB);
                 System.out.println("Thread " + this.getName() + " Done");
                 return;
                 
             } catch (RemoteException ex) {
                 ex.printStackTrace();
+            } catch (NotBoundException nbe){
+                nbe.printStackTrace();
+            } catch (MalformedURLException mue) {
+                mue.printStackTrace();
             }
-            
         }
     }
 }
