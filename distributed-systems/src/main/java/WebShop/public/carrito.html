@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-/bQdsTh/da6pkI1MST/rWKFNjaCP5gBSY4sEBT38Q/9RBh9AH40zEOg7Hlq2THRZ"
+        crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.1.3/css/bootstrap.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.21/css/dataTables.bootstrap4.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.2.4/css/responsive.bootstrap4.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.min.css" />
+    <link rel="stylesheet" href="https://bootswatch.com/5/flatly/bootstrap.css">
+    <!-- Bootstrap Font Icon CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css">
+
+    <script src="https://code.jquery.com/jquery-3.5.1.js"></script>
+    <script src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.10.21/js/dataTables.bootstrap4.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.2.4/js/dataTables.responsive.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.2.4/js/responsive.bootstrap4.min.js"></script>
+    <script src="https://kit.fontawesome.com/7b6ceee0e6.js" crossorigin="anonymous"></script>
+    <script src='WSClient.js'></script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.2/jquery-confirm.min.css">
+
+    <title>EscoMarket</title>
+
+    <style>
+        .order-card {
+            color: #fff;
+        }
+
+        .bg-c-blue {
+            background: linear-gradient(45deg, #4099ff, #73b4ff);
+        }
+
+        .bg-c-green {
+            background: linear-gradient(45deg, #2ed8b6, #59e0c5);
+        }
+
+        .bg-c-yellow {
+            background: linear-gradient(45deg, #FFB64D, #ffcb80);
+        }
+
+        .bg-c-pink {
+            background: linear-gradient(45deg, #FF5370, #ff869a);
+        }
+
+
+        .card {
+            border-radius: 5px;
+            -webkit-box-shadow: 0 1px 2.94px 0.06px rgba(4, 26, 55, 0.16);
+            box-shadow: 0 1px 2.94px 0.06px rgba(4, 26, 55, 0.16);
+            border: none;
+            margin-bottom: 30px;
+            -webkit-transition: all 0.3s ease-in-out;
+            transition: all 0.3s ease-in-out;
+        }
+
+        .card .card-block {
+            padding: 25px;
+        }
+
+        .order-card i {
+            font-size: 26px;
+        }
+
+        .f-left {
+            float: left;
+        }
+
+        .f-right {
+            float: right;
+        }
+
+        input[type=number]::-webkit-inner-spin-button {
+            opacity: 1
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">EscoMarket</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse ml-auto order-1" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link active" aria-current="page" href="index.html">Inicio</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" aria-current="page" href="captura-articulo.html">Captura de
+                            Artículos</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" aria-current="page" href="compra-articulos.html">Comprar
+                            Artículos</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" aria-current="page" href="carrito.html">Carrito de Compra</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="modal fade" id="confirmacion" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="mensajeModal">Confirmación</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    ¿Está seguro de eliminar el artículo?
+                </div>
+                <div class="modal-footer">
+                    <button id="ejecutar-accion" type="button" class="btn btn-secondary">Sí</button>
+                    <button id="no-ejecutar-accion" type="button" class="btn btn-primary">No</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="card-title"><b>Carrito de compra.</b></h5>
+            </div>
+            <div class="card-body">
+                <div class="container py-4">
+                    <div class="mb-3">
+                        <label class="form-label">Costo total</label>
+                        <input type="text" class="form-control" id="costo-total" disabled>
+                    </div>
+		    <div class="mb-3">
+                        <a onclick="eliminarCarrito()" class="btn btn-sm btn-danger"> Eliminar Carrio de Compra <i class="fas fa-trash-alt"></i> </a>
+                    </div>
+                    <table id="carrito" class="table table-striped table-bordered dt-responsive nowrap"
+                        style="width: 100%">
+                        <thead>
+                            <tr>
+                                <th>Imagen</th>
+                                <th>Descripción</th>
+                                <th>Cantidad</th>
+                                <th>Precio</th>
+                                <th>Costo</th>
+                                <th>Eliminar</th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        var foto = null;
+        var url = "Servicio/rest/escomarket";
+        var accionConfirmada = false;
+
+        function confirmarAccion(mensaje, id, callback) {
+            document.getElementById('mensajeModal').value = mensaje;
+            document.getElementById('ejecutar-accion').onclick = () => {
+                callback(id)
+                $('#confirmacion').modal('toggle');
+            }
+            document.getElementById('no-ejecutar-accion').onclick = () => {
+                $('#confirmacion').modal('toggle');
+            }
+            $('#confirmacion').modal('toggle');
+        }
+
+        var data = [
+            {
+                "id": 14,
+                "articulo": {
+                    "id": 1,
+                    "precio": "123",
+                    "cantidad": "16",
+                    "foto": "01010w==",
+                    "descripcion": "Descripción del artículo"
+                },
+                "cantidad": 3
+            },
+            {
+                "id": 15,
+                "articulo": {
+                    "id": 2,
+                    "precio": "1",
+                    "cantidad": "16",
+                    "foto": "01010w==",
+                    "descripcion": "Descripción del artículo"
+                },
+                "cantidad": 1
+            }
+        ]
+
+        window.onload = function enviar() {
+            const cliente = new WSClient(url);
+
+            cliente.post(
+                'carrito-compra',
+                {},
+                (code, result) => {
+                    if (code == 200) {
+                        const table = $("#carrito").DataTable();
+                        let costoTotal = 0;
+                        result.forEach((entrada) => {
+                            table.row.add(entrada).draw(false);
+                            costoTotal += parseInt(entrada.cantidad) * parseInt(entrada.articulo.precio);
+                        });
+                        document.getElementById('costo-total').value = costoTotal;
+                    } else {
+                        alert(result.message)
+                    }
+                }
+            );
+        }
+
+        function eliminar(idCarro) {
+
+            confirmarAccion(
+                '¿Está seguro que desea eliminar el artículo?',
+                idCarro,
+                (id) => {
+                    const cliente = new WSClient(url);
+                    const table = $('#carrito').DataTable();
+                    cliente.post(
+                        'quitar-de-carrito',
+			    { entrada: {id: id} },
+                        (code, result) => {
+                            if (code == 200) {
+                                const rowElement = document.getElementById(idCarro);
+                                const rowData = table.row($(rowElement).parents('tr')).data();
+                                let costoNuevo = parseInt(document.getElementById('costo-total').value) - (parseInt(rowData.articulo.precio) * parseInt(rowData.cantidad));
+                                document.getElementById('costo-total').value = costoNuevo;
+                                table.row($(rowElement).parents('tr'))
+                                    .remove()
+                                    .draw(false);
+                                alert('Artículo eliminado del carrito')
+                            } else {
+                                alert(result.message)
+                            }
+                        }
+                    );
+                });
+        }
+
+        function eliminarCarrito() {
+            confirmarAccion(
+                '¿Está seguro que desea eliminar todos los artículos del carrito?',
+                "",
+                () => {
+                    var table = $('#carrito').DataTable();
+                    const cliente = new WSClient(url);
+                    cliente.post(
+                        'borrar-carrito',
+                        {},
+                        (code, result) => {
+                            if (code == 200) {
+                                table.rows().remove().draw(false);
+                                document.getElementById('costo-total').value = 0;
+                                alert('Todos los artículos eliminados del carrito')
+                            } else {
+                                alert(result.message)
+                            }
+                        }
+                    );
+                }
+            );
+
+
+        }
+
+        $(document).ready(function () {
+            //Enlazando tabla con datos AJAX
+            const table = $("#carrito").DataTable({
+                responsive: true,
+                "language": {
+                    "emptyTable": "Sin resultados"
+                },
+                scrollX: true,
+                data: [],
+                columns: [
+                    {
+                        data: null,
+                        render: function (data, type, row, meta) {
+                            return `<img width="90" height="90" src="data:image/jpg;base64,${data.articulo.foto}">`;
+                        },
+                    },
+                    {
+                        data: "articulo.descripcion",
+                    },
+                    {
+                        data: "cantidad",
+                    },
+                    {
+                        data: "articulo.precio",
+                    },
+                    {
+                        data: null,
+                        render: function (data, type, row, meta) {
+                            const costo = parseInt(data.articulo.precio) * parseInt(data.cantidad);
+                            return costo;
+                        },
+                    },
+                    {
+                        data: null,
+                        render: function (data, type, row, meta) {
+                            return `
+                                    <a
+                                    id="${data.id}"
+                                    onclick="eliminar(${data.id})"
+                                    class="remover btn btn-sm btn-danger"> Eliminar
+                                    <i class="fas fa-trash-alt"></i>
+                                    </a>`;
+                        },
+                    }
+                ],
+            });
+        });
+
+        //$('#carrito').on('click', '.remover', function () {
+        //    var table = $('#carrito').DataTable();
+        //    table
+        //        .row($(this).parents('tr'))
+        //        .remove()
+        //        .draw(false);
+        //});
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+        crossorigin="anonymous"></script>
+    <script src="https://kit.fontawesome.com/7b6ceee0e6.js" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-3.5.1.js"></script>
+    <script src="https://cdn.datatables.net/1.11.3/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.3/js/dataTables.bootstrap5.min.js"></script>
+    <!-- Bootstrap js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+        integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+        crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
+        integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+        crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.2/jquery-confirm.min.js"></script>
+</body>
+
+</html>
