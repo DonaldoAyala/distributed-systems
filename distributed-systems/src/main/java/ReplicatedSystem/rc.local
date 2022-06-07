@@ -1,0 +1,5 @@
+#!/bin/bash
+iptables -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-port 8080 -t nat
+runuser -l R2019630415 -c 'export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64;export CATALINA_HOME=/home/R2019630415/apache-tomcat-8.5.77; sh $CATALINA_HOME/bin/catalina.sh start'
+
+exit 0
