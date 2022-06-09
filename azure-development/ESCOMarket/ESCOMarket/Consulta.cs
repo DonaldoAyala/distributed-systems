@@ -16,16 +16,13 @@ namespace ESCOMarket
     {
         [FunctionName("buscar-articulo")]
         public static async Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = null)] HttpRequest req,
             ILogger log)
         {
-            Console.WriteLine("Hola");
-            string descripcion = req.Query["descripcion"];
-
             string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
             dynamic data = JsonConvert.DeserializeObject(requestBody);
             
-            descripcion = descripcion ?? data?.descripcion;
+            string descripcion = data.descripcion;
 
             if (descripcion == null)
             {

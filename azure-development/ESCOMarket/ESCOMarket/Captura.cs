@@ -16,7 +16,7 @@ namespace ESCOMarket
     {
         [FunctionName("captura-articulo")]
         public static async Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Function, "post", Route = null)] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = null)] HttpRequest req,
             ILogger log)
         {
             string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
@@ -25,6 +25,7 @@ namespace ESCOMarket
             {
                 return new BadRequestObjectResult(JsonConvert.SerializeObject(new Mensaje("Se debe ingresar una descripción de artículo")));
             }
+            Console.WriteLine(data.descripcion);
             if (data.precio == null || data.precio == "")
             {
                 return new BadRequestObjectResult(JsonConvert.SerializeObject(new Mensaje("Se debe asignar un precio al artículo")));
@@ -65,7 +66,10 @@ namespace ESCOMarket
                 var insertionCommand = new MySqlCommand("INSERT INTO articulos VALUES (0,@descripcion,@precio,@cantidad,@foto)", conexion);
                 try
                 {
-                    insertionCommand.Parameters.AddWithValue("@descripcion", data.descripcion);
+                    string desc = data.descripcion;
+                    desc = desc.Normalize();
+                    insertionCommand.Parameters.AddWithValue("@descripcion", desc);
+                    Console.WriteLine(insertionCommand.Parameters.ToString());
                     insertionCommand.Parameters.AddWithValue("@precio", data.precio);
                     insertionCommand.Parameters.AddWithValue("@cantidad", data.cantidad);
                     insertionCommand.Parameters.AddWithValue("@foto", Convert.FromBase64String((string)data.foto));
@@ -81,7 +85,7 @@ namespace ESCOMarket
             } 
             catch (Exception e)
             {
-                return new BadRequestObjectResult(e.Message);
+                return new BadRequestObjectResult(JsonConvert.SerializeObject(new Mensaje(e.Message)));
             }
         }
     }
