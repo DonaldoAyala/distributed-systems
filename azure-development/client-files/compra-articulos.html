@@ -85,7 +85,7 @@
 <body>
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
         <div class="container-fluid">
-            <a class="navbar-brand" href="/">EscoMarket</a>
+            <a class="navbar-brand" href="index.html">EscoMarket</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
                 aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
@@ -156,7 +156,7 @@
 
     <script>
         var foto = null;
-        var url = "Servicio/rest/escomarket";
+        var url = "https://escomarket.azurewebsites.net/api";
 
 
         function enviar() {
@@ -169,15 +169,15 @@
 
             cliente.post(
                 'buscar-articulo',
-                { articulo: articulo },
+                articulo,
                 (code, result) => {
-			console.log(result)
                     if (code == 200) {
                         table.rows().remove().draw(false);
+                        result = JSON.parse(result)
+                        result = JSON.parse(result)
                         result.forEach((articulo) => {
                             table.row.add(articulo).draw(false);
                         });
-			console.log(result)
                     } else {
                         alert(result.message)
                     }
@@ -194,14 +194,11 @@
 
             cliente.post(
                 'agregar-a-carrito',
-                { articulo: articulo },
+                articulo,
                 (code, result) => {
-            		console.log(result)
-                    if (code == 200) {
-                        alert("Artículo agregado");
-                    } else {
-                        alert(result.message)
-                    }
+            		result = JSON.parse(result)
+                    mensaje = JSON.parse(result)
+                    alert(mensaje.texto)
                 }
             );
         }
@@ -220,21 +217,21 @@
                         data: null,
                         render: function (data, type, row, meta) {
                             const image = new Image();
-                            image.setAttribute('src', "data:image/jpg;base64," + data.foto);
+                            image.setAttribute('src', "data:image/jpg;base64," + data.Foto);
                             image.width = 100;
-                            return `<img width="90" height="90" src="data:image/jpg;base64,${data.foto}">`;
+                            return `<img width="90" height="90" src="data:image/jpg;base64,${data.Foto}">`;
                         },
                     },
                     {
-                        data: "descripcion",
+                        data: "Descripcion",
                     },
                     {
-                        data: "precio",
+                        data: "Precio",
                     },
                     {
                         data: null,
                         render: function (data, type, row, meta) {
-                            return `<input id="${data.id}i" type="number" value="1" min="1" max="999">`;
+                            return `<input id="${data.Id}i" type="number" value="1" min="1" max="999">`;
                         },
                     },
                     {
@@ -242,8 +239,8 @@
                         render: function (data, type, row, meta) {
                             return `
                                     <a
-                                    id="${data.id}"
-                                    onclick="agregarACarrito(${data.id})"
+                                    id="${data.Id}"
+                                    onclick="agregarACarrito(${data.Id})"
                                     class="btn btn-sm btn-success"> Comprar
                                     <i class="fas fa-plus"></i>
                                     </a>`;

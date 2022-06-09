@@ -21,7 +21,7 @@
     <script src="https://cdn.datatables.net/1.10.21/js/dataTables.bootstrap4.min.js"></script>
     <script src="https://cdn.datatables.net/responsive/2.2.4/js/dataTables.responsive.min.js"></script>
     <script src="https://cdn.datatables.net/responsive/2.2.4/js/responsive.bootstrap4.min.js"></script>
-    <script src='/WSClient.js'></script>
+    <script src='WSClient.js'></script>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.2/jquery-confirm.min.css">
 
@@ -80,7 +80,7 @@
 <body>
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
         <div class="container-fluid">
-            <a class="navbar-brand" href="/">EcomMarket</a>
+            <a class="navbar-brand" href="index.html">EcomMarket</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
                 aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
@@ -140,7 +140,7 @@
 
     <script>
         var foto = null;
-        var url = "Servicio/rest/escomarket";
+        var url = "https://escomarket.azurewebsites.net/api";
 
         function readSingleFile(files, imagen) {
             var file = files[0];
@@ -166,15 +166,11 @@
 
              cliente.post(
                  'captura-articulo',
-                 {articulo: articulo},
+                 articulo,
                  (code, result) => {
-                     if (code == 200) {
-                         alert('Artículo guardado')
-                	 ocument.getElementById('descripcion').value = "";
-			     
-                     } else {
-                         alert(result.message)
-                     }
+                    result = JSON.parse(result);
+                    mensaje = JSON.parse(result);
+                    alert(mensaje.texto);
                  }
              );
         }
